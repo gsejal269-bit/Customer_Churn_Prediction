@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retention Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ── Reset & Tokens ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0B0F1A;
+  --surface:   #111827;
+  --card:      #1A2235;
+  --card2:     #1E2A3F;
+  --border:    #1F2D45;
+  --border2:   #253350;
+  --blue:      #3B82F6;
+  --blue-dim:  #1D3557;
+  --red:       #EF4444;
+  --red-dim:   #3B1212;
+  --amber:     #F59E0B;
+  --amber-dim: #3B2800;
+  --green:     #10B981;
+  --green-dim: #0D2B1F;
+  --purple:    #8B5CF6;
+  --purple-dim:#1E1540;
+  --text:      #F1F5F9;
+  --text2:     #94A3B8;
+  --text3:     #64748B;
+  --radius:    10px;
+  --radius-sm: 6px;
+  --shadow:    0 4px 24px rgba(0,0,0,.4);
+}
+[data-theme="light"] {
+  --bg:        #F0F4FC;
+  --surface:   #FFFFFF;
+  --card:      #FFFFFF;
+  --card2:     #F8FAFF;
+  --border:    #E2E8F0;
+  --border2:   #CBD5E1;
+  --blue-dim:  #DBEAFE;
+  --red-dim:   #FEE2E2;
+  --amber-dim: #FEF3C7;
+  --green-dim: #D1FAE5;
+  --purple-dim:#EDE9FE;
+  --text:      #0F172A;
+  --text2:     #475569;
+  --text3:     #94A3B8;
+  --shadow:    0 4px 24px rgba(0,0,0,.1);
+}
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; }
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; position: sticky; top: 0; z-index: 5; }
+.content { padding: 24px; flex: 1; }
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+.brand-logo { display: flex; align-items: center; gap: 9px; }
+.brand-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.brand-name { font-size: 13px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+.brand-sub  { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
+.nav { flex: 1; padding: 10px 8px; overflow-y: auto; }
+.nav-section { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; padding: 10px 8px 5px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all .15s; margin-bottom: 1px; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: var(--card); color: var(--text); }
+.nav-item.active { background: var(--blue-dim); color: var(--blue); }
+.nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; }
+.sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--border); }
+
+/* ── Topbar ─────────────────────────────────────────────────── */
+.page-title { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--card); color: var(--text); }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { opacity: .88; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.pill { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.pill-red    { background: var(--red-dim);    color: var(--red);    }
+.pill-amber  { background: var(--amber-dim);  color: var(--amber);  }
+.pill-green  { background: var(--green-dim);  color: var(--green);  }
+.pill-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.pill-purple { background: var(--purple-dim); color: var(--purple); }
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.g-auto { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+/* ── KPI Cards ──────────────────────────────────────────────── */
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; }
+.kpi::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi.blue::after   { background: var(--blue);   }
+.kpi.red::after    { background: var(--red);    }
+.kpi.green::after  { background: var(--green);  }
+.kpi.amber::after  { background: var(--amber);  }
+.kpi.purple::after { background: var(--purple); }
+.kpi-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.kpi-value { font-size: 28px; font-weight: 800; letter-spacing: -.04em; line-height: 1; margin-bottom: 6px; }
+.kpi-delta { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+.kpi-delta.up   { color: var(--green); }
+.kpi-delta.down { color: var(--red); }
+.kpi-icon { position: absolute; right: 16px; top: 16px; font-size: 22px; opacity: .15; }
+
+/* ── Sections ───────────────────────────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Table ──────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { padding: 10px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+th:hover { color: var(--text); }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tr:hover td { background: var(--card2); }
+tr:last-child td { border-bottom: none; }
+.risk-bar { height: 5px; background: var(--border); border-radius: 99px; width: 80px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.risk-fill { height: 100%; border-radius: 99px; }
+.customer-link { color: var(--blue); cursor: pointer; font-weight: 600; }
+.customer-link:hover { text-decoration: underline; }
+
+/* ── Filters ────────────────────────────────────────────────── */
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-input { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; outline: none; }
+.filter-input:focus { border-color: var(--blue); }
+
+/* ── Gauge / Risk Ring ──────────────────────────────────────── */
+.gauge-wrap { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+.gauge-svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+.gauge-track { fill: none; stroke: var(--border); stroke-width: 10; }
+.gauge-fill  { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .9s cubic-bezier(.34,1.56,.64,1), stroke .4s; }
+.gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gauge-pct { font-size: 26px; font-weight: 800; letter-spacing: -.04em; }
+.gauge-label { font-size: 11px; color: var(--text3); }
+
+/* ── What-If sliders ────────────────────────────────────────── */
+.wif-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.wif-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); }
+.wif-val { font-weight: 700; color: var(--text); }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--border2); border-radius: 2px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--blue); border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--blue); }
+select.wif-select { background: var(--card2); border: 1px solid var(--border2); color: var(--text); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; outline: none; cursor: pointer; }
+select.wif-select option { background: var(--card); }
+
+/* ── Heatmap ────────────────────────────────────────────────── */
+.heatmap-grid { display: grid; gap: 3px; }
+.hm-cell { border-radius: 4px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; cursor: default; transition: transform .15s; }
+.hm-cell:hover { transform: scale(1.08); z-index: 1; }
+.hm-label { font-size: 11px; color: var(--text3); text-align: center; padding: 4px 0; }
+
+/* ── Progress bars ──────────────────────────────────────────── */
+.prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+.prog-label { width: 130px; color: var(--text2); flex-shrink: 0; }
+.prog-bar  { flex: 1; height: 7px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.56,.64,1); }
+.prog-val  { width: 44px; text-align: right; font-weight: 700; color: var(--text); }
+
+/* ── Tooltips ───────────────────────────────────────────────── */
+[data-tip] { position: relative; }
+[data-tip]:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); font-size: 11px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; pointer-events: none; z-index: 99; }
+
+/* ── Customer Profile ───────────────────────────────────────── */
+.profile-header { display: flex; align-items: center; gap: 16px; padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
+.avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.profile-name { font-size: 18px; font-weight: 700; }
+.profile-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.profile-actions { margin-left: auto; display: flex; gap: 8px; }
+.rec-card { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 10px; }
+.rec-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.rec-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.rec-desc  { font-size: 12px; color: var(--text2); }
+.rec-impact { font-size: 11px; color: var(--green); margin-top: 4px; font-weight: 600; }
+
+/* ── Notification banner ────────────────────────────────────── */
+.alert-banner { position: fixed; top: 16px; right: 16px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--radius); padding: 12px 16px; max-width: 320px; z-index: 100; font-size: 13px; animation: slideIn .3s ease; display: none; }
+@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: none; opacity: 1; } }
+.alert-banner.show { display: block; }
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp .35s ease forwards; }
+@keyframes countUp { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Theme toggle ───────────────────────────────────────────── */
+.theme-btn { background: var(--card); border: 1px solid var(--border); color: var(--text2); border-radius: 99px; padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.theme-btn:hover { border-color: var(--blue); color: var(--text); }
+
+/* ── Export ─────────────────────────────────────────────────── */
+.export-menu { position: relative; }
+.export-dropdown { position: absolute; right: 0; top: calc(100% + 6px); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); min-width: 160px; z-index: 20; display: none; box-shadow: var(--shadow); }
+.export-dropdown.open { display: block; }
+.export-item { padding: 9px 14px; font-size: 13px; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 8px; transition: background .1s; }
+.export-item:hover { background: var(--card2); color: var(--text); }
+
+/* ── Model comparison ───────────────────────────────────────── */
+.model-row { display: grid; grid-template-columns: 150px repeat(5, 1fr); gap: 0; }
+.model-row > div { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.model-row.header > div { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); font-weight: 600; }
+.model-row.best > div { background: var(--blue-dim); }
+.bar-inline { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 5px; }
+.bar-inline-fill { height: 100%; border-radius: 99px; background: var(--blue); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) { .g4 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .sidebar { width: 0; overflow: hidden; } .g2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ── Alert banner ──────────────────────────────────────────── -->
+<div class="alert-banner" id="alertBanner">
+  <strong>🔴 High-Risk Alert</strong><br>
+  <span id="alertText">3 customers exceeded 85% churn risk in the last hour.</span>
+  <div style="margin-top:6px;"><button class="btn btn-sm" style="background:var(--red);color:#fff;" onclick="document.getElementById('alertBanner').classList.remove('show')">Dismiss</button></div>
+</div>
+
+<div class="app">
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon">🧬</div>
+      <div>
+        <div class="brand-name">RetainIQ</div>
+        <div class="brand-sub">Intelligence Platform</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Analytics</div>
+    <button class="nav-item active" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</button>
+    <button class="nav-item" onclick="showSection('customers',this)"><span class="icon">👥</span> Customers <span class="nav-badge" id="highRiskBadge">47</span></button>
+    <button class="nav-item" onclick="showSection('profile',this)"><span class="icon">🔍</span> Customer Profile</button>
+    <button class="nav-item" onclick="showSection('whatif',this)"><span class="icon">🔮</span> What-If Analysis</button>
+    <div class="nav-section">Intelligence</div>
+    <button class="nav-item" onclick="showSection('cohort',this)"><span class="icon">📅</span> Cohort Analysis</button>
+    <button class="nav-item" onclick="showSection('revenue',this)"><span class="icon">💸</span> Revenue Forecast</button>
+    <button class="nav-item" onclick="showSection('models',this)"><span class="icon">🤖</span> Model Comparison</button>
+    <div class="nav-section">Settings</div>
+    <button class="nav-item" onclick="triggerAlert()"><span class="icon">🔔</span> Email Alerts</button>
+  </div>
+  <div class="sidebar-footer">
+    <div style="font-size:11px;color:var(--text3);padding:4px 8px;">Model: XGBoost v2.1 · AUC 0.934</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Executive Dashboard</div>
+    <div class="topbar-right">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
+      <div class="export-menu">
+        <button class="btn btn-ghost" onclick="toggleExport()">⬇ Export ▾</button>
+        <div class="export-dropdown" id="exportMenu">
+          <div class="export-item" onclick="exportCSV()">📄 Export CSV</div>
+          <div class="export-item" onclick="exportPDF()">📑 Export PDF Report</div>
+          <div class="export-item" onclick="exportExcel()">📊 Export Excel</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="runModel()">⚡ Run Prediction</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+  <!-- ══════════ DASHBOARD ══════════ -->
+  <div class="section active" id="sec-dashboard">
+    <!-- KPI row -->
+    <div class="grid g4" style="margin-bottom:16px;">
+      <div class="kpi blue fade-up"><div class="kpi-icon">👥</div><div class="kpi-label">Total Customers</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-delta up">↑ +3.2% this month</div></div>
+      <div class="kpi red fade-up" style="animation-delay:.05s"><div class="kpi-icon">⚠️</div><div class="kpi-label">Churn Rate</div><div class="kpi-value" id="kpi-churn">0%</div><div class="kpi-delta down">↓ 18.4% of base</div></div>
+      <div class="kpi amber fade-up" style="animation-delay:.1s"><div class="kpi-icon">🎯</div><div class="kpi-label">At-Risk Customers</div><div class="kpi-value" id="kpi-atrisk">0</div><div class="kpi-delta down">↑ +82 since last week</div></div>
+      <div class="kpi green fade-up" style="animation-delay:.15s"><div class="kpi-icon">💰</div><div class="kpi-label">Revenue at Risk</div><div class="kpi-value" id="kpi-rev">$0</div><div class="kpi-delta down">↑ Monthly recurring</div></div>
+    </div>
+    <div class="grid g4" style="margin-bottom:20px;">
+      <div class="kpi purple fade-up"><div class="kpi-icon">♾️</div><div class="kpi-label">Avg CLV</div><div class="kpi-value" id="kpi-clv">$0</div><div class="kpi-delta up">↑ +8% YoY</div></div>
+      <div class="kpi green fade-up" style="animation-delay:.05s"><div class="kpi-icon">🏆</div><div class="kpi-label">Loyal Customers</div><div class="kpi-value" id="kpi-loyal">0</div><div class="kpi-delta up">↑ Tenure &gt; 36mo</div></div>
+      <div class="kpi blue fade-up" style="animation-delay:.1s"><div class="kpi-icon">🆕</div><div class="kpi-label">New Customers</div><div class="kpi-value" id="kpi-new">0</div><div class="kpi-delta up">↑ Last 90 days</div></div>
+      <div class="kpi amber fade-up" style="animation-delay:.15s"><div class="kpi-icon">⭐</div><div class="kpi-label">Premium Customers</div><div class="kpi-value" id="kpi-prem">0</div><div class="kpi-delta up">↑ MRR &gt; $80</div></div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid g2" style="margin-bottom:16px;">
+      <div class="card fade-up">
+        <div class="card-title">Monthly Churn Trend<span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;letter-spacing:0;">12-month rolling</span></div>
+        <canvas id="trendChart" height="200"></canvas>
+      </div>
+      <div class="card fade-up">
+        <div class="card-title">Risk Distribution<span style="font-size:10px;color:var(--text3);text-transform:none;font-weight:400;letter-spacing:0;">Current period</span></div>
+        <canvas id="riskDist" height="200"></canvas>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-bottom:16px;">
+      <div class="card fade-up">
+        <div class="card-title">Churn by Contract</div>
+        <canvas id="contractChart" height="180"></canvas>
+      </div>
+      <div class="card fade-up">
+        <div class="card-title">Top Churn Reasons</div>
+        <div id="reasonBars" style="padding-top:6px;"></div>
+      </div>
+      <div class="card fade-up">
+        <div class="card-title">Customer Segments</div>
+        <canvas id="segChart" height="180"></canvas>
+      </div>
+    </div>
+    <!-- SHAP / Feature importance -->
+    <div class="card fade-up">
+      <div class="card-title">Feature Importance (SHAP)<span><span class="pill pill-blue">XGBoost</span></span></div>
+      <div id="shapBars" style="margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ CUSTOMERS ══════════ -->
+  <div class="section" id="sec-customers">
+    <div class="filter-row">
+      <input class="filter-input" id="searchInput" placeholder="🔍  Search customers…" oninput="filterTable()" style="flex:1;min-width:180px;">
+      <select class="filter-input" id="riskFilter" onchange="filterTable()">
+        <option value="">All Risk Levels</option>
+        <option value="High">High Risk</option>
+        <option value="Medium">Medium Risk</option>
+        <option value="Low">Low Risk</option>
+      </select>
+      <select class="filter-input" id="segFilter" onchange="filterTable()">
+        <option value="">All Segments</option>
+        <option value="Loyal">Loyal</option>
+        <option value="New">New</option>
+        <option value="Premium">Premium</option>
+        <option value="At-Risk">At-Risk</option>
+      </select>
+      <select class="filter-input" id="contractFilter" onchange="filterTable()">
+        <option value="">All Contracts</option>
+        <option value="Month-to-month">Month-to-month</option>
+        <option value="One year">One year</option>
+        <option value="Two year">Two year</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="customerTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('id')">Customer ID ↕</th>
+              <th onclick="sortTable('segment')">Segment ↕</th>
+              <th onclick="sortTable('contract')">Contract ↕</th>
+              <th onclick="sortTable('tenure')">Tenure ↕</th>
+              <th onclick="sortTable('monthly')">Monthly $ ↕</th>
+              <th onclick="sortTable('clv')">CLV ↕</th>
+              <th onclick="sortTable('prob')">Churn Prob ↕</th>
+              <th onclick="sortTable('risk')">Risk ↕</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 0 0;color:var(--text3);font-size:12px;" id="tableInfo"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PROFILE ══════════ -->
+  <div class="section" id="sec-profile">
+    <div id="profileContent">
+      <div style="text-align:center;padding:60px 20px;color:var(--text3);">
+        <div style="font-size:40px;margin-bottom:12px;">🔍</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No customer selected</div>
+        <div style="font-size:13px;">Click a customer name in the Customers table to view their profile.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ WHAT-IF ══════════ -->
+  <div class="section" id="sec-whatif">
+    <div class="grid g2">
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Adjust Customer Attributes</div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Contract Type</span></div>
+            <select class="wif-select" id="wif-contract" onchange="updateWIF()">
+              <option>Month-to-month</option>
+              <option>One year</option>
+              <option>Two year</option>
+            </select>
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Internet Service</span></div>
+            <select class="wif-select" id="wif-internet" onchange="updateWIF()">
+              <option>Fiber optic</option>
+              <option>DSL</option>
+              <option>No</option>
+            </select>
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Payment Method</span></div>
+            <select class="wif-select" id="wif-payment" onchange="updateWIF()">
+              <option>Electronic check</option>
+              <option>Mailed check</option>
+              <option>Bank transfer</option>
+              <option>Credit card</option>
+            </select>
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Tech Support</span></div>
+            <select class="wif-select" id="wif-tech" onchange="updateWIF()">
+              <option>No</option>
+              <option>Yes</option>
+            </select>
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Tenure (months)</span><span class="wif-val" id="wif-tenure-val">12</span></div>
+            <input type="range" min="1" max="72" value="12" id="wif-tenure" oninput="document.getElementById('wif-tenure-val').textContent=this.value;updateWIF()">
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Monthly Charges ($)</span><span class="wif-val" id="wif-charge-val">65</span></div>
+            <input type="range" min="18" max="120" value="65" id="wif-charge" oninput="document.getElementById('wif-charge-val').textContent=this.value;updateWIF()">
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Support Calls</span><span class="wif-val" id="wif-calls-val">2</span></div>
+            <input type="range" min="0" max="10" value="2" id="wif-calls" oninput="document.getElementById('wif-calls-val').textContent=this.value;updateWIF()">
+          </div>
+          <div class="wif-row">
+            <div class="wif-label"><span>Online Backup</span></div>
+            <select class="wif-select" id="wif-backup" onchange="updateWIF()">
+              <option>No</option>
+              <option>Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Live Churn Risk</div>
+          <div class="gauge-wrap" style="margin:16px auto;">
+            <svg class="gauge-svg" viewBox="0 0 140 140">
+              <circle class="gauge-track" cx="70" cy="70" r="55"/>
+              <circle class="gauge-fill" id="wif-gauge" cx="70" cy="70" r="55" stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke="#3B82F6"/>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-pct" id="wif-pct">0%</div>
+              <div class="gauge-label" id="wif-tier">Low Risk</div>
+            </div>
+          </div>
+          <div id="wif-factors" style="margin-top:12px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Scenario Comparison</div>
+          <canvas id="wifChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ COHORT ══════════ -->
+  <div class="section" id="sec-cohort">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Retention Cohort Heatmap <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;">% retained by month</span></div>
+      <div style="overflow-x:auto;">
+        <div id="heatmapWrap"></div>
+      </div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-title">Customer Lifetime Value Distribution</div>
+        <canvas id="clvChart" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Churn Rate by Tenure Band</div>
+        <canvas id="tenureChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REVENUE ══════════ -->
+  <div class="section" id="sec-revenue">
+    <div class="grid g3" style="margin-bottom:16px;">
+      <div class="kpi red"><div class="kpi-label">Projected Monthly Loss</div><div class="kpi-value">$198K</div><div class="kpi-delta down">If no intervention</div></div>
+      <div class="kpi amber"><div class="kpi-label">6-Month Cumulative Loss</div><div class="kpi-value">$1.04M</div><div class="kpi-delta down">Compound effect</div></div>
+      <div class="kpi green"><div class="kpi-label">Recoverable Revenue</div><div class="kpi-value">$142K</div><div class="kpi-delta up">With retention actions</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">12-Month Revenue Impact Forecast</div>
+      <canvas id="revenueChart" height="240"></canvas>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-title">Revenue at Risk by Segment</div>
+        <canvas id="segRevenueChart" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Retention ROI Simulation</div>
+        <div style="padding-top:8px;" id="roiTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MODELS ══════════ -->
+  <div class="section" id="sec-models">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Model Performance Comparison</div>
+      <div class="model-row header">
+        <div>Model</div><div>AUC-ROC</div><div>F1 Score</div><div>Precision</div><div>Recall</div><div>Accuracy</div>
+      </div>
+      <div id="modelRows"></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-title">ROC Curves</div>
+        <canvas id="rocChart" height="280"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Precision-Recall Curves</div>
+        <canvas id="prChart" height="280"></canvas>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════
+// DATA ENGINE
+// ════════════════════════════════════════
+const RNG = (seed => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; }; })(42);
+
+const CONTRACTS   = ['Month-to-month','Month-to-month','Month-to-month','One year','One year','Two year'];
+const INTERNETS   = ['Fiber optic','Fiber optic','DSL','DSL','No'];
+const PAYMENTS    = ['Electronic check','Electronic check','Mailed check','Bank transfer','Credit card'];
+const SEGMENTS    = ['Loyal','New','Premium','At-Risk'];
+
+function genCustomers(n) {
+  const customers = [];
+  for (let i = 0; i < n; i++) {
+    const contract  = CONTRACTS[Math.floor(RNG()*CONTRACTS.length)];
+    const internet  = INTERNETS[Math.floor(RNG()*INTERNETS.length)];
+    const payment   = PAYMENTS[Math.floor(RNG()*PAYMENTS.length)];
+    const tenure    = contract==='Two year' ? Math.floor(RNG()*48+12) : contract==='One year' ? Math.floor(RNG()*36+6) : Math.floor(RNG()*30+1);
+    const monthly   = internet==='Fiber optic' ? 65+RNG()*55 : internet==='DSL' ? 30+RNG()*40 : 18+RNG()*18;
+    const techSupport = RNG() > 0.65 ? 'Yes' : 'No';
+    const backup    = RNG() > 0.60 ? 'Yes' : 'No';
+    const calls     = Math.floor(RNG()*7);
+    const senior    = RNG() > 0.84 ? 1 : 0;
+
+    // Logistic churn model
+    let logit = -2.5
+      + (contract==='Month-to-month'?1.9:contract==='One year'?0.5:0)
+      + (internet==='Fiber optic'?0.9:0)
+      - 0.04*tenure
+      + 0.015*monthly
+      + (payment==='Electronic check'?0.55:0)
+      - (techSupport==='Yes'?0.7:0)
+      - (backup==='Yes'?0.4:0)
+      + 0.35*calls
+      + 0.2*senior
+      + (RNG()-0.5)*1.2;
+    const prob = 1/(1+Math.exp(-logit));
+
+    const tier = prob>0.6?'High':prob>0.3?'Medium':'Low';
+
+    let segment;
+    if (tenure>=36 && prob<0.3) segment='Loyal';
+    else if (tenure<=3) segment='New';
+    else if (monthly>=80) segment='Premium';
+    else segment='At-Risk';
+
+    const clv = monthly * tenure * (1 - prob*0.5) * 1.2;
+
+    customers.push({
+      id: `C-${String(i+1).padStart(4,'0')}`,
+      contract, internet, payment, tenure,
+      monthly: +monthly.toFixed(2),
+      monthly_raw: monthly,
+      techSupport, backup, calls, senior,
+      prob: +prob.toFixed(4),
+      tier, segment,
+      clv: +clv.toFixed(0),
+      name: `Customer ${i+1}`,
+      partner: RNG()>0.5?'Yes':'No',
+      dependents: RNG()>0.7?'Yes':'No',
+      streaming: RNG()>0.6?'Yes':'No',
+    });
+  }
+  return customers;
+}
+
+const CUSTOMERS = genCustomers(500);
+const HIGH_RISK = CUSTOMERS.filter(c=>c.tier==='High');
+const MED_RISK  = CUSTOMERS.filter(c=>c.tier==='Medium');
+const LOW_RISK  = CUSTOMERS.filter(c=>c.tier==='Low');
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+const TITLES = { dashboard:'Executive Dashboard', customers:'Customer Intelligence', profile:'Customer Profile', whatif:'What-If Analysis', cohort:'Cohort Analysis', revenue:'Revenue Forecast', models:'Model Comparison' };
+let currentSection = 'dashboard';
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = TITLES[id]||id;
+  currentSection = id;
+  if (id==='cohort') buildCohort();
+  if (id==='models') buildModels();
+  if (id==='revenue') buildRevenue();
+  if (id==='whatif') updateWIF();
+}
+
+// ════════════════════════════════════════
+// KPI ANIMATION
+// ════════════════════════════════════════
+function animNum(id, target, pre='', suf='', dur=1200) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  const tick = now => {
+    const t = Math.min((now-start)/dur,1);
+    const ease = 1-Math.pow(1-t,3);
+    const v = target*ease;
+    el.textContent = pre+(target<100?v.toFixed(target<10?1:0):Math.round(v).toLocaleString())+suf;
+    if (t<1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function buildKPIs() {
+  const total   = CUSTOMERS.length;
+  const atRisk  = HIGH_RISK.length;
+  const revenue = HIGH_RISK.reduce((s,c)=>s+c.monthly,0);
+  const avgCLV  = CUSTOMERS.reduce((s,c)=>s+c.clv,0)/total;
+  const loyal   = CUSTOMERS.filter(c=>c.segment==='Loyal').length;
+  const newC    = CUSTOMERS.filter(c=>c.segment==='New').length;
+  const prem    = CUSTOMERS.filter(c=>c.segment==='Premium').length;
+  animNum('kpi-total', total, '', '', 1000);
+  animNum('kpi-churn', (atRisk/total*100), '', '%', 1100);
+  animNum('kpi-atrisk', atRisk, '', '', 1000);
+  animNum('kpi-rev',   revenue/1000, '$', 'K', 1200);
+  animNum('kpi-clv',   avgCLV, '$', '', 900);
+  animNum('kpi-loyal', loyal, '', '', 800);
+  animNum('kpi-new',   newC,  '', '', 800);
+  animNum('kpi-prem',  prem,  '', '', 800);
+  document.getElementById('highRiskBadge').textContent = atRisk;
+}
+
+// ════════════════════════════════════════
+// CHARTS — DASHBOARD
+// ════════════════════════════════════════
+const CC = { dark: { grid:'rgba(255,255,255,.06)', tick:'#64748B' }, light: { grid:'rgba(0,0,0,.07)', tick:'#94A3B8' } };
+function cOpts(theme='dark') {
+  return { color: CC[theme].tick, grid: { color: CC[theme].grid } };
+}
+
+let charts = {};
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function buildDashCharts() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Trend chart
+  destroyChart('trendChart');
+  charts.trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label:'Churn Rate %', data:[22,20,19,21,18,17,19,16,18,15,17,14], borderColor:'#EF4444', backgroundColor:'rgba(239,68,68,.1)', fill:true, tension:.4, pointRadius:3 },
+        { label:'Retained %', data:[78,80,81,79,82,83,81,84,82,85,83,86], borderColor:'#10B981', backgroundColor:'rgba(16,185,129,.08)', fill:true, tension:.4, pointRadius:3 },
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#94A3B8',boxWidth:12,font:{size:11}}}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11}}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11}}} } }
+  });
+
+  // Risk distribution donut
+  destroyChart('riskDist');
+  charts.riskDist = new Chart(document.getElementById('riskDist'), {
+    type: 'doughnut',
+    data: {
+      labels: ['High Risk','Medium Risk','Low Risk'],
+      datasets: [{ data:[HIGH_RISK.length, MED_RISK.length, LOW_RISK.length], backgroundColor:['#EF4444','#F59E0B','#10B981'], borderWidth:0, hoverOffset:6 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{legend:{position:'right',labels:{color:'#94A3B8',boxWidth:12,font:{size:11}}}} }
+  });
+
+  // Contract chart
+  destroyChart('contractChart');
+  charts.contractChart = new Chart(document.getElementById('contractChart'), {
+    type:'bar',
+    data:{
+      labels:['M-t-M','One Year','Two Year'],
+      datasets:[
+        {label:'Churned',data:[38,15,6],backgroundColor:'#EF4444'},
+        {label:'Retained',data:[62,85,94],backgroundColor:'#3B82F6'},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94A3B8',boxWidth:10,font:{size:11}}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#64748B',font:{size:11}}},y:{stacked:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11}}}}}
+  });
+
+  // Segment chart
+  destroyChart('segChart');
+  charts.segChart = new Chart(document.getElementById('segChart'), {
+    type:'polarArea',
+    data:{
+      labels:['Loyal','New','Premium','At-Risk'],
+      datasets:[{data:[
+        CUSTOMERS.filter(c=>c.segment==='Loyal').length,
+        CUSTOMERS.filter(c=>c.segment==='New').length,
+        CUSTOMERS.filter(c=>c.segment==='Premium').length,
+        CUSTOMERS.filter(c=>c.segment==='At-Risk').length,
+      ],backgroundColor:['rgba(16,185,129,.7)','rgba(59,130,246,.7)','rgba(139,92,246,.7)','rgba(239,68,68,.7)'],borderWidth:0}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94A3B8',boxWidth:10,font:{size:11}}}}}
+  });
+
+  // Reason bars
+  const reasons = [
+    {label:'Price too high',    val:34, color:'#EF4444'},
+    {label:'Competitor offer',  val:26, color:'#F59E0B'},
+    {label:'Poor support',      val:19, color:'#8B5CF6'},
+    {label:'Service issues',    val:13, color:'#3B82F6'},
+    {label:'Relocation',        val:8,  color:'#10B981'},
+  ];
+  document.getElementById('reasonBars').innerHTML = reasons.map(r=>`
+    <div class="prog-row">
+      <div class="prog-label">${r.label}</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:0%;background:${r.color}" data-w="${r.val}%"></div></div>
+      <div class="prog-val">${r.val}%</div>
+    </div>`).join('');
+
+  // SHAP bars
+  const shap = [
+    {label:'Contract Type',      val:0.31, color:'#EF4444'},
+    {label:'Tenure (months)',    val:0.24, color:'#F59E0B'},
+    {label:'Internet Service',   val:0.18, color:'#8B5CF6'},
+    {label:'Monthly Charges',    val:0.14, color:'#3B82F6'},
+    {label:'Support Calls',      val:0.12, color:'#EF4444'},
+    {label:'Payment Method',     val:0.09, color:'#F59E0B'},
+    {label:'Tech Support',       val:0.08, color:'#10B981'},
+    {label:'Online Backup',      val:0.06, color:'#10B981'},
+    {label:'Senior Citizen',     val:0.05, color:'#94A3B8'},
+    {label:'Streaming Services', val:0.04, color:'#94A3B8'},
+  ];
+  document.getElementById('shapBars').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 32px;">'+shap.map(s=>`
+    <div class="prog-row">
+      <div class="prog-label">${s.label}</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:0%;background:${s.color}" data-w="${s.val/0.31*100}%"></div></div>
+      <div class="prog-val">${s.val}</div>
+    </div>`).join('')+'</div>';
+
+  // Animate bars
+  setTimeout(()=>{
+    document.querySelectorAll('.prog-fill[data-w]').forEach(el=>{
+      el.style.transition='width .8s cubic-bezier(.34,1.56,.64,1)';
+      el.style.width=el.dataset.w;
+    });
+  }, 200);
+}
+
+// ════════════════════════════════════════
+// CUSTOMER TABLE
+// ════════════════════════════════════════
+let sortKey = 'prob', sortDir = -1;
+let visibleCustomers = [...CUSTOMERS];
+
+function sortTable(key) {
+  if(sortKey===key) sortDir*=-1; else { sortKey=key; sortDir=-1; }
+  filterTable();
+}
+
+function filterTable() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const risk= document.getElementById('riskFilter').value;
+  const seg = document.getElementById('segFilter').value;
+  const con = document.getElementById('contractFilter').value;
+  visibleCustomers = CUSTOMERS.filter(c=>
+    (!q || c.id.toLowerCase().includes(q) || c.segment.toLowerCase().includes(q)) &&
+    (!risk || c.tier===risk) && (!seg || c.segment===seg) && (!con || c.contract===con)
+  ).sort((a,b)=>{
+    const va = sortKey==='id'?a.id : sortKey==='segment'?a.segment : sortKey==='contract'?a.contract :
+               sortKey==='tenure'?a.tenure : sortKey==='monthly'?a.monthly : sortKey==='clv'?a.clv :
+               sortKey==='prob'?a.prob : sortKey==='risk'?a.tier : 0;
+    const vb = sortKey==='id'?b.id : sortKey==='segment'?b.segment : sortKey==='contract'?b.contract :
+               sortKey==='tenure'?b.tenure : sortKey==='monthly'?b.monthly : sortKey==='clv'?b.clv :
+               sortKey==='prob'?b.prob : sortKey==='risk'?b.tier : 0;
+    return typeof va==='string' ? va.localeCompare(vb)*sortDir : (va-vb)*sortDir;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const body = document.getElementById('tableBody');
+  const tierColor = {High:'var(--red)',Medium:'var(--amber)',Low:'var(--green)'};
+  const tierClass = {High:'pill-red',Medium:'pill-amber',Low:'pill-green'};
+  const segClass  = {Loyal:'pill-green',New:'pill-blue',Premium:'pill-purple','At-Risk':'pill-red'};
+  body.innerHTML = visibleCustomers.slice(0,100).map(c=>`
+    <tr>
+      <td><span class="customer-link" onclick="openProfile('${c.id}')">${c.id}</span></td>
+      <td><span class="pill ${segClass[c.segment]}">${c.segment}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${c.contract}</td>
+      <td>${c.tenure} mo</td>
+      <td>$${c.monthly.toFixed(0)}</td>
+      <td style="color:var(--purple);">$${c.clv.toLocaleString()}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="risk-bar"><div class="risk-fill" style="width:${c.prob*100}%;background:${tierColor[c.tier]};"></div></div>
+          <span style="color:${tierColor[c.tier]};font-weight:700;">${(c.prob*100).toFixed(1)}%</span>
+        </div>
+      </td>
+      <td><span class="pill ${tierClass[c.tier]}">${c.tier}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openProfile('${c.id}')">View</button></td>
+    </tr>`).join('');
+  document.getElementById('tableInfo').textContent = `Showing ${Math.min(visibleCustomers.length,100)} of ${visibleCustomers.length} customers`;
+}
+
+// ════════════════════════════════════════
+// CUSTOMER PROFILE
+// ════════════════════════════════════════
+function openProfile(id) {
+  const c = CUSTOMERS.find(x=>x.id===id);
+  if(!c) return;
+  showSection('profile', document.querySelector('.nav-item:nth-child(3)'));
+
+  const avatarColors = ['#3B82F6','#8B5CF6','#EF4444','#10B981','#F59E0B'];
+  const aColor = avatarColors[parseInt(id.split('-')[1])%5];
+  const tierColor = {High:'var(--red)',Medium:'var(--amber)',Low:'var(--green)'};
+  const tierClass = {High:'pill-red',Medium:'pill-amber',Low:'pill-green'};
+
+  const recommendations = getRecs(c);
+
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-header fade-up">
+      <div class="avatar" style="background:${aColor}">${c.id.split('-')[1][0]}</div>
+      <div>
+        <div class="profile-name">${c.id}</div>
+        <div class="profile-meta">${c.contract} · ${c.internet} · ${c.tenure} months tenure</div>
+      </div>
+      <div style="margin-left:20px;"><span class="pill ${tierClass[c.tier]}">⚠ ${c.tier} Risk</span></div>
+      <div class="profile-actions">
+        <button class="btn btn-ghost btn-sm" onclick="alert('Email alert sent for '+id+'!')">📧 Alert</button>
+        <button class="btn btn-primary btn-sm" onclick="showSection('whatif')">🔮 What-If</button>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-bottom:16px;">
+      <div class="card fade-up"><div class="card-title">Churn Probability</div>
+        <div style="font-size:36px;font-weight:800;color:${tierColor[c.tier]};letter-spacing:-.04em;">${(c.prob*100).toFixed(1)}%</div>
+        <div style="margin-top:8px;"><div class="risk-bar" style="width:100%;height:8px;"><div class="risk-fill" style="width:${c.prob*100}%;background:${tierColor[c.tier]}"></div></div></div>
+      </div>
+      <div class="card fade-up"><div class="card-title">Customer Lifetime Value</div>
+        <div style="font-size:32px;font-weight:800;color:var(--purple);letter-spacing:-.04em;">$${c.clv.toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px;">$${c.monthly}/mo × ${c.tenure} mo</div>
+      </div>
+      <div class="card fade-up"><div class="card-title">Segment</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;">${c.segment}</div>
+        <div style="margin-top:8px;"><span class="pill ${tierClass[c.tier]}">${c.tier} Risk</span></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-bottom:16px;">
+      <div class="card fade-up">
+        <div class="card-title">Profile Details</div>
+        ${[
+          ['Contract', c.contract],
+          ['Internet', c.internet],
+          ['Payment', c.payment],
+          ['Monthly Charges', '$'+c.monthly],
+          ['Tech Support', c.techSupport],
+          ['Online Backup', c.backup],
+          ['Support Calls', c.calls+' in last 6 mo'],
+          ['Partner', c.partner],
+          ['Dependents', c.dependents],
+          ['Senior Citizen', c.senior?'Yes':'No'],
+        ].map(([k,v])=>`
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+            <span style="color:var(--text2)">${k}</span>
+            <span style="font-weight:600;">${v}</span>
+          </div>`).join('')}
+      </div>
+      <div class="card fade-up">
+        <div class="card-title">Retention Recommendations</div>
+        ${recommendations.map(r=>`
+          <div class="rec-card">
+            <div class="rec-icon">${r.icon}</div>
+            <div>
+              <div class="rec-title">${r.title}</div>
+              <div class="rec-desc">${r.desc}</div>
+              <div class="rec-impact">↓ Est. churn reduction: ${r.impact}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function getRecs(c) {
+  const recs = [];
+  if (c.contract==='Month-to-month') recs.push({icon:'📜',title:'Offer Annual Contract',desc:'Provide 15% discount to switch to a 1-year plan.',impact:'−18%'});
+  if (c.monthly>75) recs.push({icon:'💸',title:'Targeted Price Discount',desc:'Offer 10% off for the next 3 months to reduce price sensitivity.',impact:'−12%'});
+  if (c.techSupport==='No') recs.push({icon:'🛡',title:'Add Tech Support',desc:'Free 90-day trial of Tech Support bundle.',impact:'−9%'});
+  if (c.calls>=4) recs.push({icon:'📞',title:'Proactive Support Call',desc:'Assign dedicated CSM to resolve open issues.',impact:'−15%'});
+  if (c.backup==='No') recs.push({icon:'☁',title:'Online Backup Trial',desc:'Activate complimentary 60-day backup service.',impact:'−7%'});
+  if (!recs.length) recs.push({icon:'🎁',title:'Loyalty Reward',desc:'Offer loyalty points or a gift card to reinforce retention.',impact:'−5%'});
+  return recs.slice(0,3);
+}
+
+// ════════════════════════════════════════
+// WHAT-IF ANALYSIS
+// ════════════════════════════════════════
+let wifChart;
+const WIF_SCENARIOS = [{label:'Current',prob:0}];
+
+function calcProb(contract,internet,payment,tech,tenure,monthly,calls,backup) {
+  let logit = -2.5
+    + (contract==='Month-to-month'?1.9:contract==='One year'?0.5:0)
+    + (internet==='Fiber optic'?0.9:0)
+    - 0.04*tenure + 0.015*monthly
+    + (payment==='Electronic check'?0.55:0)
+    - (tech==='Yes'?0.7:0)
+    - (backup==='Yes'?0.4:0)
+    + 0.35*calls;
+  return 1/(1+Math.exp(-logit));
+}
+
+function updateWIF() {
+  const contract = document.getElementById('wif-contract').value;
+  const internet = document.getElementById('wif-internet').value;
+  const payment  = document.getElementById('wif-payment').value;
+  const tech     = document.getElementById('wif-tech').value;
+  const tenure   = +document.getElementById('wif-tenure').value;
+  const monthly  = +document.getElementById('wif-charge').value;
+  const calls    = +document.getElementById('wif-calls').value;
+  const backup   = document.getElementById('wif-backup').value;
+
+  const prob = calcProb(contract,internet,payment,tech,tenure,monthly,calls,backup);
+  const pct  = Math.round(prob*100);
+  const tier = prob>0.6?'High Risk':prob>0.3?'Medium Risk':'Low Risk';
+  const color= prob>0.6?'#EF4444':prob>0.3?'#F59E0B':'#10B981';
+  const circ = 345.4;
+  const offset = circ - (pct/100)*circ;
+
+  document.getElementById('wif-pct').textContent   = pct+'%';
+  document.getElementById('wif-pct').style.color   = color;
+  document.getElementById('wif-tier').textContent  = tier;
+  const gauge = document.getElementById('wif-gauge');
+  gauge.style.strokeDashoffset = offset;
+  gauge.style.stroke = color;
+
+  // Factors
+  const factors = [
+    {label:'Contract type',    w: contract==='Month-to-month'?0.31:contract==='One year'?0.12:0.04, pos: contract!=='Two year'},
+    {label:'Tenure',           w: Math.max(0.02, 0.28-tenure*0.004), pos:tenure<20},
+    {label:'Internet service', w: internet==='Fiber optic'?0.18:0.06, pos:internet==='Fiber optic'},
+    {label:'Monthly charges',  w: Math.min(0.2,monthly/120*0.18), pos:monthly>80},
+    {label:'Support calls',    w: calls*0.04, pos:calls>3},
+    {label:'Tech support',     w: 0.09, pos:tech==='No'},
+  ];
+  document.getElementById('wif-factors').innerHTML = `
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Contributing Factors</div>`+
+    factors.map(f=>`<div class="prog-row">
+      <div class="prog-label" style="font-size:12px;">${f.label}</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${Math.round(f.w/0.31*100)}%;background:${f.pos?'#EF4444':'#10B981'}"></div></div>
+      <div class="prog-val" style="font-size:12px;color:${f.pos?'#EF4444':'#10B981'}">${Math.round(f.w*100)}%</div>
+    </div>`).join('');
+
+  // Scenario bar
+  if (!WIF_SCENARIOS.find(s=>s.label==='Current')) WIF_SCENARIOS.push({label:'Current',prob});
+  WIF_SCENARIOS[0].prob = prob;
+
+  if (!wifChart) {
+    wifChart = new Chart(document.getElementById('wifChart'), {
+      type:'bar',
+      data:{
+        labels:['Current','−Contract','+TechSupport','−Fiber','2yr Plan'],
+        datasets:[{
+          data:[prob,
+            calcProb('Two year',internet,payment,tech,tenure,monthly,calls,backup),
+            calcProb(contract,internet,payment,'Yes',tenure,monthly,calls,backup),
+            calcProb(contract,'DSL',payment,tech,tenure,monthly,calls,backup),
+            calcProb('Two year',internet,payment,'Yes',tenure,monthly,calls,'Yes'),
+          ].map(v=>+(v*100).toFixed(1)),
+          backgroundColor:['#EF4444','#F59E0B','#10B981','#3B82F6','#10B981'],
+          borderWidth:0, borderRadius:6,
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false},ticks:{color:'#64748B',font:{size:11}}},
+          y:{min:0,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11}},
+            title:{display:true,text:'Churn Probability %',color:'#64748B',font:{size:11}}}}}
+    });
+  } else {
+    wifChart.data.datasets[0].data = [prob,
+      calcProb('Two year',internet,payment,tech,tenure,monthly,calls,backup),
+      calcProb(contract,internet,payment,'Yes',tenure,monthly,calls,backup),
+      calcProb(contract,'DSL',payment,tech,tenure,monthly,calls,backup),
+      calcProb('Two year',internet,payment,'Yes',tenure,monthly,calls,'Yes'),
+    ].map(v=>+(v*100).toFixed(1));
+    wifChart.update('active');
+  }
+}
+
+// ════════════════════════════════════════
+// COHORT HEATMAP
+// ════════════════════════════════════════
+function buildCohort() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const periods = 6;
+  // Generate retention matrix
+  const matrix = [];
+  for(let r=0;r<months.length;r++){
+    const row=[];
+    for(let c=0;c<periods;c++){
+      if(c>r) { row.push(null); continue; }
+      const base = 100 - r*1.5;
+      const decay = Math.pow(0.92 - r*0.003, c);
+      row.push(Math.max(10, Math.round(base*decay)));
+    }
+    matrix.push(row);
+  }
+
+  function heatColor(v) {
+    if(v===null) return 'transparent';
+    if(v>=80) return '#10B981';
+    if(v>=60) return '#3B82F6';
+    if(v>=40) return '#F59E0B';
+    return '#EF4444';
+  }
+
+  const headerRow = `<div class="heatmap-grid" style="grid-template-columns:70px ${Array(periods).fill('1fr').join(' ')};margin-bottom:4px;">
+    <div class="hm-label"></div>${Array.from({length:periods},(_,i)=>`<div class="hm-label">M+${i}</div>`).join('')}
+  </div>`;
+
+  const rows = months.map((m,r)=>`
+    <div class="heatmap-grid" style="grid-template-columns:70px ${Array(periods).fill('1fr').join(' ')};margin-bottom:3px;">
+      <div style="display:flex;align-items:center;font-size:12px;color:var(--text3);padding-right:8px;">${m}</div>
+      ${matrix[r].map(v=>`<div class="hm-cell" style="background:${heatColor(v)};opacity:${v?0.2+v/120:0};color:#fff;" data-tip="${v!==null?v+'% retained':''}">
+        ${v!==null?v:''}
+      </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('heatmapWrap').innerHTML = headerRow + rows;
+
+  // CLV chart
+  destroyChart('clvChart');
+  const clvBuckets = [0,500,1000,2000,3000,5000,10000];
+  const clvCounts = clvBuckets.slice(0,-1).map((_,i)=>
+    CUSTOMERS.filter(c=>c.clv>=clvBuckets[i]&&c.clv<clvBuckets[i+1]).length);
+  charts.clvChart = new Chart(document.getElementById('clvChart'), {
+    type:'bar',
+    data:{
+      labels:['<$500','$500-1K','$1K-2K','$2K-3K','$3K-5K','$5K+'],
+      datasets:[{data:clvCounts,backgroundColor:'#8B5CF6',borderWidth:0,borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{color:'#64748B',font:{size:11}}},
+              y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11}}}}}
+  });
+
+  // Tenure chart
+  destroyChart('tenureChart');
+  const tenureBands = [[0,3],[3,6],[6,12],[12,24],[24,36],[36,72]];
+  const tenureChurn = tenureBands.map(([a,b])=>{
+    const group = CUSTOMERS.filter(c=>c.tenure>=a&&c.tenure<b);
+    return group.length ? +(group.filter(c=>c.tier==='High').length/group.length*100).toFixed(1) : 0;
+  });
+  charts.tenureChart = new Chart(document.getElementById('tenureChart'), {
+    type:'line',
+    data:{
+      labels:['0-3mo','3-6mo','6-12mo','12-24mo','24-36mo','36mo+'],
+      datasets:[{data:tenureChurn,borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.1)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#EF4444'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{color:'#64748B',font:{size:11}}},
+              y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:11},callback:v=>v+'%'}}}}
+  });
+}
+
+// ════════════════════════════════════════
+// REVENUE FORECAST
+// ════════════════════════════════════════
+function buildRevenue() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const base = 198;
+  const noAction   = months.map((_,i)=>+(base * Math.pow(1.04,i)).toFixed(0));
+  const withAction = months.map((_,i)=>+(base * Math.pow(1.04,i) * 0.62).toFixed(0));
+
+  destroyChart('revenueChart');
+  charts.revenueChart = new Chart(document.getElementById('revenueChart'), {
+    type:'line',
+    data:{
+      labels:months,
+      datasets:[
+        {label:'Revenue Lost (No Action)',data:noAction,borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.12)',fill:true,tension:.4},
+        {label:'Revenue Lost (With Retention)',data:withAction,borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94A3B8',boxWidth:12,font:{size:11}}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#64748B'}},
+              y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',callback:v=>'$'+v+'K'}}}}
+  });
+
+  // Segment revenue chart
+  destroyChart('segRevenueChart');
+  charts.segRevenueChart = new Chart(document.getElementById('segRevenueChart'), {
+    type:'bar',
+    data:{
+      labels:['At-Risk','Premium','New','Loyal'],
+      datasets:[{
+        data:[112,58,18,10],
+        backgroundColor:['#EF4444','#8B5CF6','#3B82F6','#10B981'],
+        borderWidth:0,borderRadius:6,
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',callback:v=>'$'+v+'K'}},
+              y:{grid:{display:false},ticks:{color:'#64748B'}}}}
+  });
+
+  // ROI table
+  document.getElementById('roiTable').innerHTML = [
+    {action:'Discount 10%',cost:'$12K',saved:'$45K',roi:'275%'},
+    {action:'Annual contract push',cost:'$5K',saved:'$38K',roi:'660%'},
+    {action:'Tech support trial',cost:'$3K',saved:'$22K',roi:'633%'},
+    {action:'CSM outreach',cost:'$8K',saved:'$35K',roi:'338%'},
+    {action:'Loyalty rewards',cost:'$15K',saved:'$52K',roi:'247%'},
+  ].map(r=>`
+    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:center;">
+      <span style="color:var(--text2)">${r.action}</span>
+      <span style="color:var(--text3)">${r.cost}</span>
+      <span style="color:var(--green)">${r.saved}</span>
+      <span style="color:var(--blue);font-weight:700;">${r.roi}</span>
+    </div>`).join('')+
+    '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;padding:6px 0;font-size:11px;color:var(--text3)"><span>Action</span><span>Cost</span><span>Saved</span><span>ROI</span></div>';
+}
+
+// ════════════════════════════════════════
+// MODEL COMPARISON
+// ════════════════════════════════════════
+function buildModels() {
+  const models = [
+    {name:'XGBoost',      auc:.934, f1:.814, prec:.836, rec:.793, acc:.881, best:true,  color:'#3B82F6'},
+    {name:'Random Forest',auc:.918, f1:.796, prec:.812, rec:.781, acc:.864, best:false, color:'#10B981'},
+    {name:'Grad. Boosting',auc:.911,f1:.788, prec:.801, rec:.775, acc:.858, best:false, color:'#8B5CF6'},
+    {name:'Logistic Reg.', auc:.872,f1:.748, prec:.762, rec:.734, acc:.821, best:false, color:'#F59E0B'},
+    {name:'SVM',           auc:.858,f1:.731, prec:.745, rec:.718, acc:.809, best:false, color:'#EF4444'},
+  ];
+
+  document.getElementById('modelRows').innerHTML = models.map(m=>`
+    <div class="model-row ${m.best?'best':''}">
+      <div style="font-weight:${m.best?700:500};color:${m.best?'var(--blue)':'var(--text)'}">
+        ${m.best?'★ ':''} ${m.name}
+      </div>
+      ${['auc','f1','prec','rec','acc'].map(k=>`
+        <div>
+          <span style="font-weight:600;">${m[k].toFixed(3)}</span>
+          <div class="bar-inline"><div class="bar-inline-fill" style="width:${m[k]*100}%;background:${m.color}"></div></div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  // ROC curves
+  const fpr  = [0,.05,.1,.15,.2,.3,.5,.7,.9,1];
+  destroyChart('rocChart');
+  charts.rocChart = new Chart(document.getElementById('rocChart'), {
+    type:'line',
+    data:{
+      labels:fpr,
+      datasets:[
+        ...models.map(m=>({
+          label:`${m.name} (${m.auc})`,
+          data:fpr.map(x=>Math.min(1,Math.pow(x,1/(m.auc*2.5)))),
+          borderColor:m.color, borderWidth:m.best?3:1.5,
+          pointRadius:0, tension:.4,
+        })),
+        {label:'Random',data:fpr,borderColor:'#334155',borderDash:[4,4],borderWidth:1,pointRadius:0},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94A3B8',boxWidth:12,font:{size:10},padding:8}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:10}},title:{display:true,text:'FPR',color:'#64748B'}},
+              y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:10}},title:{display:true,text:'TPR',color:'#64748B'}}}}
+  });
+
+  // PR curves
+  const rec = [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1];
+  destroyChart('prChart');
+  charts.prChart = new Chart(document.getElementById('prChart'), {
+    type:'line',
+    data:{
+      labels:rec,
+      datasets:models.map(m=>({
+        label:`${m.name}`,
+        data:rec.map(r=>Math.max(0, m.f1*1.1 - r*r*0.8 + (1-m.f1)*0.05)),
+        borderColor:m.color, borderWidth:m.best?3:1.5,
+        pointRadius:0, tension:.3,
+      }))
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94A3B8',boxWidth:12,font:{size:10},padding:8}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:10}},title:{display:true,text:'Recall',color:'#64748B'}},
+              y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#64748B',font:{size:10}},title:{display:true,text:'Precision',color:'#64748B'}}}}
+  });
+}
+
+// ════════════════════════════════════════
+// THEME TOGGLE
+// ════════════════════════════════════════
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme')==='dark';
+  root.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('themeBtn').textContent = isDark?'🌙 Dark':'☀ Light';
+}
+
+// ════════════════════════════════════════
+// EXPORT STUBS
+// ════════════════════════════════════════
+function toggleExport() { document.getElementById('exportMenu').classList.toggle('open'); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.export-menu')) document.getElementById('exportMenu').classList.remove('open'); });
+
+function exportCSV() {
+  const headers = ['CustomerID','Segment','Contract','Tenure','Monthly','CLV','ChurnProb','RiskTier'];
+  const rows = CUSTOMERS.map(c=>[c.id,c.segment,c.contract,c.tenure,c.monthly,c.clv,(c.prob*100).toFixed(1),c.tier]);
+  const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'churn_predictions.csv';
+  a.click();
+  toggleExport();
+}
+
+function exportPDF() {
+  alert('PDF report generation triggered. In production, this would use a library like jsPDF or call a server-side endpoint to render a multi-page PDF with all charts and KPIs.');
+  toggleExport();
+}
+
+function exportExcel() {
+  alert('Excel export triggered. In production, integrate SheetJS (xlsx) to generate a multi-sheet workbook with customer data, KPIs, and charts.');
+  toggleExport();
+}
+
+// ════════════════════════════════════════
+// ALERTS
+// ════════════════════════════════════════
+function triggerAlert() {
+  document.getElementById('alertBanner').classList.add('show');
+  setTimeout(()=>document.getElementById('alertBanner').classList.remove('show'), 6000);
+}
+
+function runModel() {
+  const btn = event.target;
+  btn.textContent = '⏳ Running…';
+  btn.disabled = true;
+  setTimeout(()=>{ btn.textContent='⚡ Run Prediction'; btn.disabled=false; triggerAlert(); }, 1800);
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+buildKPIs();
+buildDashCharts();
+filterTable();
+
+// Show alert after 3s for demo
+setTimeout(triggerAlert, 3000);
+</script>
+</body>
+</html>
